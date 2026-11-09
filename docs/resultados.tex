@@ -1,0 +1,196 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else
+  \usepackage{fontspec}
+\fi
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{caption}
+\usepackage{xurl}
+\usepackage{hyperref}
+
+\geometry{margin=2.3cm}
+\graphicspath{{../results/graficas/}}
+\hypersetup{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}
+\captionsetup{labelfont=bf,skip=6pt,justification=centering}
+
+\input{resultados_macros}
+
+\title{Resultados y solución de la reimplementación\\[0.35em]
+\large Intrinsic ripples in graphene --- $N=240$, $T=300\,\mathrm{K}$}
+\author{Emanuel Orozco Gallego}
+\date{4 de noviembre de 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Resultados de \Nrep{} réplicas de Monte Carlo independientes ($N=240$, $T=300\,\mathrm{K}$, $4\times 10^5$ pasos de equilibrado y $5\times 10^5$ de producción). Se comparan con las soluciones del paper: $G_0(q)/N=T/(\kappa S_0 q^2)$ con $\kappa=1.1\,\mathrm{eV}$, el pico de $g(r)$ en el enlace conjugado $1.42\,\text{\AA}$, y la predicción de que una caja de $\sim 25\,\text{\AA}$ no hospeda el máximo de $70\,\text{\AA}$. Las figuras están en PNG.
+\end{abstract}
+
+\tableofcontents
+\vspace{0.5em}
+
+\section{Protocolo ejecutado}
+
+Se usaron 14 procesos Mojo de 16 núcleos lógicos (2 reservados al sistema, \texttt{taskset} por réplica). Semilla base $42$. Cada réplica escribe CSV en \path{results/datos/}; \path{scripts/generate_plots.py} produce solo PNG/JPG en \path{results/graficas/}.
+
+\begin{center}
+\small
+\begin{tabular}{lcc}
+\toprule
+Cantidad & Paper / solución & Esta corrida \\
+\midrule
+$N$ & 240 (Tabla I) & 240 \\
+$T$ & $300\,\mathrm{K}$ (máximo pedido) & $300\,\mathrm{K}$ \\
+$L_x\times L_y$ inicial & $24.59\times 25.56\,\text{\AA}$ & $24.59\times 25.56\,\text{\AA}$ \\
+Pasos eq.\ /\ prod. & $4\times 10^5$ / $5\times 10^5$ & igual \\
+Réplicas & 1 cadena & \Nrep{} independientes \\
+Muestras $G(q)$, $g(r)$ & promediado MC & \NsampTot{} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Solución 1: ondulaciones térmicas}
+
+El paper (Fig.~1): en equilibrio hay fluctuaciones de altura, no una hoja rígida. Para $N=8640$ citan $h$ típico $\sim 0.6\,\text{\AA}$. En $N=240$ la caja es más pequeña y $\langle h^2\rangle\propto L^2$ en el límite armónico, así que $h_{\mathrm{rms}}$ debe ser menor, pero estrictamente positivo.
+
+\begin{center}
+\begin{tabular}{lc}
+\toprule
+Observable & Valor (media $\pm$ desv.\ entre réplicas) \\
+\midrule
+$h_{\mathrm{rms}}$ (producción) & $\HrmsMean\pm\HrmsStd\,\text{\AA}$ \\
+$h_{\mathrm{rms}}$ al final del eq. & $\HeqMean\,\text{\AA}$ \\
+$E/N$ & $\EoverN\,\mathrm{eV/átomo}$ \\
+Aceptación desplazamientos & $\AccMove$~\% \\
+Aceptación de área & $\AccArea$~\% \\
+Caja final $\langle L_x\rangle\times\langle L_y\rangle$ & $\LxMean\times\LyMean\,\text{\AA}$ \\
+$S_0$ & $\Szero\,\text{\AA}^2$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+$h_{\mathrm{rms}}>0$ confirma rizados intrínsecos. $E/N<0$ indica que la hoja sigue ligada (no se ha fundido ni desarmado a $300\,\mathrm{K}$).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{snapshot_3d.png}
+\caption{Instantánea 3D de una réplica. El color es $h_i=z_i-\langle z\rangle$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{snapshot_h_top.png}
+\caption{Vista cenital de $h$. Las ondulaciones no están impuestos: salen del MC desde una hoja plana.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{traza_equilibrio.png}
+\caption{Trazas de $h_{\mathrm{rms}}$ y $E/N$ frente al paso MC. El equilibrado termina en el paso $4\times 10^5$.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{histograma_h.png}
+\caption{Histograma de $h$ (planos del centro de masa). Distribución ancha y centrada en cero, como describe el paper.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.72\textwidth]{hrms_replicas.png}
+\caption{$h_{\mathrm{rms}}$ de cada réplica independiente: la dispersión estima el error de muestreo.}
+\end{figure}
+
+\section{Solución 2: $G(q)$ armónico y ausencia del pico a $70\,\text{\AA}$}
+
+La solución analítica de referencia (eqs.\ (5)--(6) del paper) es
+\begin{equation}
+\frac{G_0(q)}{N}=\frac{T}{\kappa S_0 q^2},\qquad \kappa=1.1\,\mathrm{eV},\quad T=300\,k_B.
+\end{equation}
+El máximo experimental/numérico del paper está en $q\approx 0.1\,\text{\AA}^{-1}$ ($70\,\text{\AA}$). En esta caja
+\[
+q_{\min}=\Qmin\,\text{\AA}^{-1} > q_{\mathrm{ripple}}=\Qripple\,\text{\AA}^{-1},
+\]
+así que \textbf{no hay modos con $q\approx 0.1$}. El paper dice explícitamente que las dos muestras más pequeñas no muestran la caída de $G(q)$ a bajo $q$. Recuperar esa ausencia es la corroboración de la Fig.~3 para $N=240$.
+
+En el intervalo $0.45\lesssim q\lesssim 1.2\,\text{\AA}^{-1}$ (lejos de Bragg y de $q_{\min}$) el cociente mediano $G(q)/G_0(q)$ vale $\GqRatio$. Un valor de orden 1 indica que la convención de Fourier y $\kappa=1.1\,\mathrm{eV}$ describen la hoja a estas escalas.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{Gq_normal_normal.png}
+\caption{Correlación normal--normal $G(q)/N$ para $N=240$ (verde) y la recta armónica $G_0(q)$ con $\kappa=1.1\,\mathrm{eV}$ (roja), en la ventana de la Fig.~3 del paper. La muestra sigue $1/q^2$ y se aparta junto a los picos de Bragg $q=2.94$ y $5.11\,\text{\AA}^{-1}$. No aparece el máximo en $q\approx 0.1\,\text{\AA}^{-1}$: esa longitud no cabe en la caja.}
+\end{figure}
+
+\section{Solución 3: $g(r)$ y el enlace conjugado}
+
+La Fig.~5 del paper coloca el primer pico de $g(r)$ a $300\,\mathrm{K}$ en $r=1.42\,\text{\AA}$ (enlace conjugado), con hombros hacia $1.31$ y $1.54\,\text{\AA}$ que LCBOPII hace más visibles a $3500\,\mathrm{K}$. Aquí $T\le 300\,\mathrm{K}$, así que el pico debe quedar en el conjugado.
+
+Primer máximo medido: $r=\RdfPeak\,\text{\AA}$ (esperado $1.42\,\text{\AA}$).
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.82\textwidth]{rdf.png}
+\caption{$g(r)$ promedio de las réplicas. Verticales: doble, conjugado y simple, como en la Fig.~5 del paper.}
+\end{figure}
+
+\section{Pruebas de corroboración}
+
+Las pruebas viven en \path{tests/} y se ejecutan con \texttt{python -m pytest tests}.
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{0.42\textwidth}p{0.52\textwidth}@{}}
+\toprule
+Prueba & Qué corrobora \\
+\midrule
+\path{test_lattice.py} & $N$, $L_x$, $L_y$, coordinación 3, $a=1.42\,\text{\AA}$. \\
+\path{test_potential.py} & \texttt{--self-test}: $\Delta E$ local $=$ global; $E/N<0$; Python $=$ C en $N=16$. \\
+\path{test_observables.py} & Hoja plana $\Rightarrow G(q)=0$; fórmula $G_0$; pico RDF; $q_{\min}>2\pi/70$. \\
+\path{test_mojo.py} & Binario Mojo: $N=240$, $E/N\approx -7.97$ (hoja plana), $\Delta E$ local $=$ global. \\
+\path{test_results.py} & CSV: solo $N=240$ y $T=300$; $h_{\mathrm{rms}}>0$; RDF en $1.42$; no hay $q<0.15$; PNG y no PDF. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Un modo sintético $h=A\cos(q_x x)$ reproduce $|h_q|$ de la convención del paper (\path{test_observables.py}): la solución~\eqref{eq:G0} no está ``pintada'' a mano, se mide sobre $h_q=\sum_j h_j e^{-iqr_j}$.
+
+\section{Límites de la comparación}
+
+\begin{itemize}
+  \item No se simuló $N=8640$ ni $T=3500\,\mathrm{K}$: el pedido fija $N=240$ y $T\le 300\,\mathrm{K}$.
+  \item El potencial no es LCBOPII. A esta escala espacial el paper ya predice que el pico de $70\,\text{\AA}$ no aparece; el Tersoff basta para rizados, $G_0(q)$ y $g(r)$ conjugado.
+  \item $h_{\mathrm{rms}}$ no debe copiar el $0.6\,\text{\AA}$ de $N=8640$.
+\end{itemize}
+
+\section{Archivos de la solución}
+
+\begin{center}
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+PNG & Contenido \\
+\midrule
+\path{snapshot_3d.png} & instantánea 3D \\
+\path{snapshot_h_top.png} & mapa de $h$ \\
+\path{Gq_normal_normal.png} & Fig.~3 restringida a $N=240$ \\
+\path{rdf.png} & Fig.~5 a $300\,\mathrm{K}$ \\
+\path{traza_equilibrio.png} & convergencia MC \\
+\path{histograma_h.png} & $P(h)$ \\
+\path{hrms_replicas.png} & error entre réplicas \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+CSV resumen: \path{results/datos/resumen_global.csv}.
+
+\end{document}

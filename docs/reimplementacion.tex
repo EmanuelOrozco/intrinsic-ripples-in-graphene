@@ -1,0 +1,208 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else
+  \usepackage{fontspec}
+\fi
+\usepackage[spanish,es-noshorthands]{babel}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{float}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{caption}
+\usepackage{xurl}
+\usepackage{hyperref}
+
+\geometry{margin=2.3cm}
+\hypersetup{colorlinks=true,linkcolor=black,urlcolor=blue,citecolor=black}
+\captionsetup{labelfont=bf,skip=6pt,justification=centering}
+\renewcommand{\lstlistingname}{}
+\captionsetup[lstlisting]{labelformat=empty,labelsep=none}
+
+\lstdefinestyle{codigo}{
+  basicstyle=\ttfamily\scriptsize,
+  keywordstyle=\bfseries,
+  commentstyle=\itshape\color{black!55},
+  breaklines=true,
+  columns=flexible,
+  keepspaces=true,
+  showstringspaces=false,
+  frame=single,
+  rulecolor=\color{black!25},
+  numbers=left,
+  numberstyle=\tiny\color{black!45},
+  numbersep=5pt,
+  xleftmargin=1.6em,
+  tabsize=4
+}
+\lstdefinestyle{py}{style=codigo,language=Python}
+\lstdefinestyle{c}{style=codigo,language=C}
+
+\newcommand{\ruta}[1]{\path{#1}}
+\newcommand{\fn}[1]{\texttt{\detokenize{#1}}}
+
+\title{Reimplementación de \emph{Intrinsic ripples in graphene}\\[0.35em]
+\large Fasolino, Los y Katsnelson (2007)\\
+N=240, $T=300\,\mathrm{K}$}
+\author{Emanuel Orozco Gallego}
+\date{4 de noviembre de 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Este documento describe la reimplementación atomística del artículo de Fasolino, Los y Katsnelson, arXiv:0704.1793. El protocolo de Monte Carlo, la geometría de la Tabla~I y los observables ($h$, $G(q)$, $g(r)$) se reproducen tal cual. La simulación se restringe a $N=240$ átomos y temperatura máxima $T=300\,\mathrm{K}$. El potencial de orden de enlace es Tersoff de carbono parametrizado para grafeno (Lindsay--Broido), de la misma clase que LCBOPII. El núcleo de Metropolis está en Mojo 1.2 compilado a \texttt{-O3}: se usan todos los núcleos del equipo menos dos.
+\end{abstract}
+
+\tableofcontents
+\vspace{0.6em}
+
+\section{Qué se reimplementa del paper}
+
+El artículo estudia ondulaciones intrínsecas de una monocapa de grafeno en equilibrio térmico. Según el teorema de Mermin--Wagner y la teoría de membranas flexibles, las fluctuaciones de longitud de onda larga destruyen el orden; el acoplo anarmónico entre modos de flexión $h$ y de estiramiento $\mathbf{u}$ puede estabilizar una fase plana con ondulaciones fuertes.
+
+El experimento numérico del paper es:
+\begin{enumerate}
+  \item Monte Carlo de Metrópolis sobre una hoja periódica, partiendo de grafeno \emph{completamente plano}.
+  \item Energía de muchos cuerpos de carbono (en el original, LCBOPII).
+  \item 1 paso MC $= N$ intentos de mover una coordenada; cada 5 pasos, una fluctuación isotrópica de área.
+  \item $4\times 10^5$ pasos de equilibrado y $5\times 10^5$ de promediado.
+  \item Observables: instantáneas de $h$, correlación normal--normal $G(q)=q^2|h_q|^2$, función de distribución radial $g(r)$.
+\end{enumerate}
+
+La Tabla~I lista seis tamaños. Aquí solo se simula la muestra más pequeña:
+\[
+N=240,\quad p=10,\quad q=6,\quad L_x=24.59\,\text{\AA},\quad L_y=25.56\,\text{\AA}.
+\]
+El paper afirma que las muestras más cortas que $\sim 70\,\text{\AA}$ \textbf{no} muestran el máximo de $G(q)$ en $q\approx 0.1\,\text{\AA}^{-1}$. Esa predicción es una de las soluciones que hay que recuperar.
+
+\section{Red cristalina}
+
+Los vectores primitivos del paper son
+\[
+\mathbf{a}_1=a\sqrt{3}\,\hat x,\qquad
+\mathbf{a}_2=a\frac{\sqrt{3}}{2}\,\hat x+\frac{3a}{2}\,\hat y,
+\]
+con $a=1.42\,\text{\AA}$. Los números de la Tabla~I coinciden con una celda rectangular de \textbf{cuatro} átomos de lados $|\mathbf{a}_1|$ y $|\mathbf{a}_1+2\mathbf{a}_2|=3a$, repetida $p\times q$ veces:
+\[
+N=4pq=240,\qquad L_x=p|\mathbf{a}_1|,\qquad L_y=q\cdot 3a.
+\]
+Base de la celda:
+\[
+(0,0),\quad (0,a),\quad \bigl(\tfrac12|\mathbf{a}_1|,\tfrac32 a\bigr),\quad \bigl(\tfrac12|\mathbf{a}_1|,\tfrac52 a\bigr).
+\]
+Condiciones periódicas en $x,y$; $z$ libre. Cada átomo tiene coordinación 3 y tres primeros vecinos a $1.42\,\text{\AA}$. Código: \ruta{src/ripples/lattice.py}.
+
+\section{Potencial}
+
+\subsection{LCBOPII en el paper}
+
+LCBOPII (Los \textit{et al.}, Phys.\ Rev.\ B \textbf{72}, 214102, 2005) es un potencial de orden de enlace de largo alcance: coordina longitud, fuerza y hibridación, y permite transiciones entre enlaces simple, doble y conjugado. Esa química es la explicación que dan los autores al máximo de $G(q)$ a $70\,\text{\AA}$.
+
+\subsection{Tersoff Lindsay--Broido en esta reimplementación}
+
+LCBOPII no está disponible como biblioteca compilable aquí (LAMMPS implementa LCBOP~2003, no LCBOPII). Se usa el Tersoff de carbono reparametrizado por Lindsay y Broido (Phys.\ Rev.\ B \textbf{81}, 205441, 2010) para grafeno:
+\begin{align*}
+E&=\frac12\sum_{i\neq j} f_C(r_{ij})\bigl[f_R(r_{ij})+b_{ij}f_A(r_{ij})\bigr],\\
+f_R&=A e^{-\lambda_1 r},\qquad f_A=-B e^{-\lambda_2 r},\\
+b_{ij}&=\bigl(1+\beta^n\zeta_{ij}^n\bigr)^{-1/(2n)},\\
+\zeta_{ij}&=\sum_{k\neq i,j}f_C(r_{ik})\,g(\theta_{ijk}).
+\end{align*}
+Parámetros: $A=1393.6\,\mathrm{eV}$, $B=430.0\,\mathrm{eV}$, $\lambda_1=3.4879\,\text{\AA}^{-1}$, $\lambda_2=2.2119\,\text{\AA}^{-1}$, $\beta=1.5724\times 10^{-7}$, $n=0.72751$, $c=38049$, $d=4.3484$, $h=-0.93$, $R=1.80\,\text{\AA}$, $S=2.10\,\text{\AA}$.
+
+Es el mismo \emph{tipo} de potencial (orden de enlace, coordinación $\to$ fuerza). No reproduce el canal conjugado/simple/doble de LCBOPII; a $N=240$ ese canal no es observable de todos modos porque la caja es menor que $70\,\text{\AA}$.
+
+Energía de la hoja plana: $E/N\approx -7.97\,\mathrm{eV/átomo}$. El incremento de energía al mover un átomo calculado con la fórmula local coincide con $\Delta E$ global a $10^{-13}\,\mathrm{eV}$.
+
+\section{Monte Carlo}
+
+Algoritmo de Metrópolis a $T=300\,\mathrm{K}$ ($k_B T=0.02585\,\mathrm{eV}$). Se parte de $z_i=0$.
+
+\paragraph{Movimiento de átomo.}
+Se elige $i$ al azar y se propone
+$\mathbf{r}_i\to\mathbf{r}_i+\delta$ con $\delta_\alpha\in[-s,s]$.
+Se acepta con $\min\bigl(1,e^{-\beta\Delta E}\bigr)$.
+$s$ se adapta para una aceptación del 40--55~\%.
+
+\paragraph{Movimiento de área (cada 5 pasos MC).}
+Escala isotrópica en el plano: $L_x,L_y,x_i,y_i\leftarrow f\cdot(\ldots)$, $f=e^{\varepsilon}$.
+A $P=0$ en 2D la probabilidad de aceptación es
+\[
+\min\bigl(1,\exp(-\beta\Delta E+N\ln(A'/A))\bigr),\qquad A'/A=f^2.
+\]
+
+\paragraph{Pasos.}
+$4\times 10^5$ de equilibrado y $5\times 10^5$ de producción; 1 paso $=N=240$ intentos. Durante la producción se acumula una muestra cada 10 pasos.
+
+\paragraph{Paralelismo y RAM.}
+14 réplicas independientes (semillas distintas a partir de 42), un proceso Mojo por núcleo, afinado con \texttt{taskset}. El equipo tiene 16 núcleos lógicos; se dejan 2 libres (\texttt{--leave-cores 2}). Mojo 1.2 no expone \texttt{parallelize} en la stdlib pública, así que el paralelismo es a nivel de proceso. Cada réplica guarda en RAM la hoja, la matriz $r_{ij}^2$, la geometría de vecinos, las trazas y los acumuladores de $G(q)$ y $g(r)$; los CSV se escriben al terminar. Muestreo cada 10 pasos de producción ($\sim 5\times 10^4$ configuraciones por réplica). Las réplicas se promedian al final: es el mismo ensamble canónico.
+
+Núcleo: \ruta{src/mojo/graphene_mc.mojo}. Lanzamiento: \ruta{scripts/run_mojo.py}. Referencia C: \ruta{src/c/graphene_mc.c}.
+
+\section{Observables y solución analítica de referencia}
+
+\subsection{Alturas}
+$h_i=z_i-\langle z\rangle$ respecto del plano del centro de masa (Fig.~2 del paper). Se reporta
+$h_{\mathrm{rms}}=\sqrt{\langle h^2\rangle}$.
+
+\subsection{Correlación de normales}
+Convención de Fourier del paper:
+\[
+h_q=\sum_j h_j\,e^{-i\mathbf{q}\cdot\mathbf{r}_j},\qquad
+G(q)=q^2|h_q|^2,\qquad
+\mathbf{q}=2\pi\Bigl(\frac{n_x}{L_x},\frac{n_y}{L_y}\Bigr).
+\]
+En la aproximación armónica (modos $h$ y $\mathbf{u}$ desacoplados)
+\begin{equation}
+  \frac{G_0(q)}{N}=\frac{T}{\kappa S_0 q^2},
+  \label{eq:G0}
+\end{equation}
+con $T$ en eV, $\kappa=1.1\,\mathrm{eV}$ a $300\,\mathrm{K}$ y $S_0=L_x L_y/N$ el área por átomo. Esta fórmula es la \emph{solución} de referencia de las Figs.~3 y~4.
+
+El primer módulo accesible en $N=240$ es $q_{\min}=2\pi/L\approx 0.25\,\text{\AA}^{-1}$, mayor que $q_{\mathrm{ripple}}=2\pi/70\,\text{\AA}\approx 0.090\,\text{\AA}^{-1}$. Por tanto $G(q)$ no puede mostrar el pico de $70\,\text{\AA}$; debe parecerse más a~\eqref{eq:G0} en los $q$ disponibles, con desviaciones cerca de los picos de Bragg $4\pi/(3a)=2.94\,\text{\AA}^{-1}$.
+
+\subsection{RDF}
+$g(r)$ en 2D con imagen mínima en $x,y$. El paper marca $1.31\,\text{\AA}$ (doble), $1.42\,\text{\AA}$ (conjugado) y $1.54\,\text{\AA}$ (simple). A $300\,\mathrm{K}$ el primer pico debe estar en el conjugado.
+
+\section{Qué escribe cada archivo}
+
+\begin{center}
+\small
+\begin{tabular}{@{}p{0.46\textwidth}p{0.48\textwidth}@{}}
+\toprule
+Archivo & Función y salida \\
+\midrule
+\ruta{src/ripples/lattice.py} & Red Tabla~I. No escribe archivos. \\
+\ruta{src/ripples/potential.py} & Tersoff de referencia en Python (tests). \\
+\ruta{src/ripples/observables.py} & $h$, $G(q)$, $G_0$, $g(r)$. \\
+\ruta{src/mojo/graphene_mc.mojo} & MC Metropolis en Mojo 1.2 (\texttt{-O3}); CSV por réplica. \\
+\ruta{src/c/graphene_mc.c} & Referencia C/OpenMP del mismo protocolo. \\
+\ruta{scripts/run_mojo.py} & Compila Mojo y lanza $n_{\mathrm{proc}}-2$ procesos. \\
+\ruta{scripts/run_simulation.py} & Entrada: backend Mojo (defecto) o C. \\
+\ruta{scripts/generate_plots.py} & Lee CSV y escribe PNG en \ruta{results/graficas/}. \\
+\ruta{tests/} & Pytest de red, potencial, $G(q)$ y de los CSV. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Cada réplica $r$ guarda \ruta{replica_r_summary.csv}, \ruta{_trace.csv}, \ruta{_gq.csv}, \ruta{_rdf.csv} y \ruta{_snapshot.csv}. Las figuras son PNG (no PDF).
+
+\section{Cómo reproducir}
+
+\begin{verbatim}
+cd src/mojo && pixi run mojo build -O3 -o graphene_mc graphene_mc.mojo
+./src/mojo/graphene_mc --self-test
+python scripts/run_mojo.py --T 300 --leave-cores 2 --skip-compile --skip-test
+python scripts/generate_plots.py
+python -m pytest tests -q
+\end{verbatim}
+
+El binario rechaza $T>300\,\mathrm{K}$. Semilla base $42$.
+
+\end{document}
