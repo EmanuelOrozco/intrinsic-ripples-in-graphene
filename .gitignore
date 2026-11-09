@@ -1,0 +1,44 @@
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Mojo toolchain and local build
+src/mojo/.pixi/
+src/mojo/graphene_mc
+src/mojo/probe*.mojo
+src/mojo/x.mojo
+src/mojo/t.txt
+src/mojo/t2.txt
+
+# C/OpenMP build products
+src/c/graphene_mc
+src/c/*.o
+src/c/*.so
+
+# Simulation output (regenerated on the cluster)
+results/
+
+# LaTeX auxiliaries and compiled notes
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+docs/*.pdf
+
+# Reference PDF stays local
+references/
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
