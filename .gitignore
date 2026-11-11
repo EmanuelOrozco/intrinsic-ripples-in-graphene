@@ -52,6 +52,8 @@ docs/*.pdf
 !docs/resultados_n8640.pdf
 !docs/resultados_tabla.pdf
 
+!docs/informe_reimplementacion.pdf
+
 # Editors and OS
 .idea/
 .vscode/

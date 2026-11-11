@@ -21,5 +21,9 @@ if [ -f resultados_tabla.tex ]; then
   "$TECTONIC" --keep-logs resultados_tabla.tex
   echo "PDF: $ROOT/resultados_tabla.pdf"
 fi
+if [ -f informe_reimplementacion.tex ]; then
+  "$TECTONIC" --keep-logs informe_reimplementacion.tex
+  echo "PDF: $ROOT/informe_reimplementacion.pdf"
+fi
 echo "PDF: $ROOT/reimplementacion.pdf"
 echo "PDF: $ROOT/resultados.pdf"
