@@ -109,8 +109,8 @@ def cluster_shells(
     dibuja escalones de la malla discreta de N=240 ni deja que un modo de
     Bragg aisle el promedio.
     """
-    q = np.asarray(q, dtype=np.float64)
-    g = np.asarray(g, dtype=np.float64)
+    q = np.atleast_1d(np.asarray(q, dtype=np.float64)).ravel()
+    g = np.atleast_1d(np.asarray(g, dtype=np.float64)).ravel()
     mask = (q > 0) & np.isfinite(q) & np.isfinite(g) & (g > 0)
     q, g = q[mask], g[mask]
     if q.size == 0:
