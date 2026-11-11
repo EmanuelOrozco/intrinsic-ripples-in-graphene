@@ -52,6 +52,16 @@ python scripts/run_simulation.py --backend c
 
 That builds `src/c/graphene_mc` with the Makefile and launches the same replica count.
 
+## N = 8640
+
+The largest sheet in this reimplementation is \(N = 8640\) (`p = 60`, `q = 36`), the same aspect ratio as Table I and longer than \(70\,\text{Å}\). The run uses all 64 hardware threads as two replicas of 32 OpenMP threads, stays inside the virtualenv at `../.venv`, and keeps going if a replica dies or its heartbeat stalls. Check it later with:
+
+```bash
+../.venv/bin/python scripts/estado_n8640.py
+```
+
+Output, checkpoints and the comparison with the paper land in `results/n8640/`. The written comparison is `docs/resultados_n8640.tex`.
+
 ## Notes
 
 `docs/reimplementacion.tex` describes the protocol. `docs/resultados.tex` reads `docs/resultados_macros.tex`, which `scripts/write_result_macros.py` rewrites from `results/datos/` after a run. Rebuild both PDFs with `docs/compilar.sh` if `tectonic` is installed.

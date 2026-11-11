@@ -205,4 +205,8 @@ python -m pytest tests -q
 
 El binario rechaza $T>300\,\mathrm{K}$. Semilla base $42$.
 
+\section{Corrida $N=8640$}
+
+La muestra grande de la Tabla~I es $N=4pq=8640$ con $p=60$ y $q=36$, la misma razón de aspecto que $N=240$ y con $L_x\approx 147.57\,\text{\AA}$, $L_y=153.36\,\text{\AA}$, ambas mayores que $70\,\text{\AA}$. El núcleo que la integra es \ruta{src/c/graphene_mc.c} (listas de celdas y OpenMP), lanzado por \ruta{scripts/pipeline_n8640.py} dentro del entorno \path{../.venv}. Usa los 64 hilos del equipo como dos réplicas de 32 hilos. El protocolo de pasos, temperatura y observables es el de las secciones anteriores. El contraste numérico con el paper, cuando la corrida cierra, queda en \ruta{docs/resultados_n8640.tex} y en \ruta{results/n8640/contraste_paper.txt}. El documento de $N=240$ no se reescribe.
+
 \end{document}
