@@ -11,9 +11,7 @@ else
   echo "No se encontró tectonic"
   exit 1
 fi
-"$TECTONIC" --keep-logs resultados_tabla.tex
 "$TECTONIC" --keep-logs informe_reimplementacion.tex
 "$TECTONIC" --keep-logs informe_codigo.tex
-echo "PDF: $ROOT/resultados_tabla.pdf"
 echo "PDF: $ROOT/informe_reimplementacion.pdf"
 echo "PDF: $ROOT/informe_codigo.pdf"

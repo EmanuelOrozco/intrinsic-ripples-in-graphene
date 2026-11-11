@@ -9,6 +9,7 @@
 \usepackage[spanish,es-noshorthands]{babel}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
+\usepackage{array}
 \usepackage{geometry}
 \usepackage{hyperref}
 \usepackage{xurl}
@@ -39,18 +40,18 @@ Hay tres capas.
 
 \begin{center}
 \small
-\begin{tabular}{@{}p{2.7cm}p{3.6cm}p{7.2cm}@{}}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{3.4cm}>{\raggedright\arraybackslash}p{3.8cm}>{\raggedright\arraybackslash}p{6.3cm}@{}}
 \toprule
 Paso & Dónde & Qué decide \\
 \midrule
 Tamaños y caja & \fn{lattice.py} & $N=4pq$, lados $L_x$ y $L_y$, hoja plana \\
-Campaña & \fn{pipeline\_tabla.py} & El orden 240 $\to$ 8640 y el salto de lo ya cerrado \\
+Campaña & \fn{pipeline\_tabla.py} & Orden 240 a 8640; salta lo ya cerrado \\
 Reparto de núcleos & \fn{pipeline\_n8640.py} & Hilos y copias para llenar 64 núcleos \\
 Energía & \fn{graphene\_mc.c} & Tersoff, con tablas en memoria \\
 Movimiento & \fn{mc\_moves} & Un paso = $N$ intentos; Metrópolis \\
 Área & \fn{run\_replica} & Cada 5 pasos, dilatar o contraer la caja \\
 Medición & \fn{sample\_observables} & $h$, $G(q)$ y $g(r)$ \\
-Figuras & \fn{generate\_plots.py} y \fn{analizar\_tabla.py} & Curvas y fotos, después de cerrar \\
+Figuras & \fn{generate\_plots.py}, \fn{analizar\_tabla.py} & Curvas y fotos, después de cerrar \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -135,7 +136,7 @@ La curva de $G(q)$ no une cada modo de Fourier. La función \fn{spectrum\_curve}
 
 La recta $G_0$ sale de \fn{G0\_harmonic}, esto es $T/(\kappa S_0 q^2)$, con $\kappa=1.1$~eV. Los ejes de la figura son los de la Fig.~3 del paper, $q$ de 0.05 a 5~Å$^{-1}$ y $G/N$ de $10^{-3}$ a 1, para poder mirarlas juntas. La foto en tres dimensiones amplía el eje $z$ seis veces y lo escribe en el título: sin eso, dos ångströms de altura ocupan en el dibujo lo mismo que el lado de la caja.
 
-\fn{contrastar\_paper.py} resume cada tamaño en un texto: altura, energía, pico de $g(r)$ y $G/G_0$. Al cerrar los cinco, \fn{analizar\_tabla.py} junta esos resúmenes, dibuja las cinco curvas en un solo eje y escribe el documento de la Tabla~I.
+\fn{contrastar\_paper.py} resume cada tamaño en un texto: altura, energía, pico de $g(r)$ y $G/G_0$. Al cerrar los cinco, \fn{analizar\_tabla.py} junta esos resúmenes, dibuja las cinco curvas en un solo eje y deja el contraste en \fn{results/tabla/}. El informe que las explica está escrito en \fn{docs/informe\_reimplementacion.tex}.
 
 \section{Qué comprueba el propio programa antes de fiarse}
 

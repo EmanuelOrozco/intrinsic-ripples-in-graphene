@@ -40,7 +40,6 @@ results/tabla/*
 *.fdb_latexmk
 *.synctex.gz
 docs/*.pdf
-!docs/resultados_tabla.pdf
 !docs/informe_reimplementacion.pdf
 !docs/informe_codigo.pdf
 

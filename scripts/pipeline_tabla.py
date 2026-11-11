@@ -3,7 +3,7 @@
 
 N=8640 se reutiliza si results/n8640/COMPLETO ya existe. El resto usa el mismo
 protocolo: T=300 K, 4e5 de equilibrado y 5e5 de producción. Al cerrar todos,
-escribe el contraste y el documento.
+escribe el contraste y las figuras.
 
     setsid ../.venv/bin/python -u scripts/pipeline_tabla.py \
         >> results/tabla/pipeline.log 2>&1 < /dev/null &

@@ -33,8 +33,7 @@ pytest
 
 ## Reports
 
-- `docs/resultados_tabla.pdf` compares the five sizes with Figs. 1, 3, and 5 of the paper.
-- `docs/informe_reimplementacion.pdf` explains each decision and why the figures differ from the paper.
+- `docs/informe_reimplementacion.pdf` is the report: the five sizes against Figs. 1, 3, and 5, and why each choice was made.
 - `docs/informe_codigo.pdf` walks through the simulation and names the function for each step.
 
 Rebuild them with `docs/compilar.sh`.
