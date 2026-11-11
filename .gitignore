@@ -46,9 +46,6 @@ docs/*.pdf
 !docs/reimplementacion.pdf
 !docs/resultados_n8640.pdf
 
-# Reference PDF stays local
-references/
-
 # Editors and OS
 .idea/
 .vscode/

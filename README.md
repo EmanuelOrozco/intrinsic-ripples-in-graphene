@@ -9,7 +9,7 @@ Atomistic reimplementation of Fasolino, Los and Katsnelson, arXiv:0704.1793, res
 - [Pixi](https://pixi.sh) and a Mojo 1.2 toolchain if you use the default backend
 - `tectonic` only if you want to rebuild the notes in `docs/`
 
-The paper PDF is not in this repository. It is arXiv:0704.1793.
+The preprint this reimplementation follows is [`references/Intrinsic_ripples_in_graphene.pdf`](references/Intrinsic_ripples_in_graphene.pdf) (arXiv:0704.1793v1).
 
 ## Setup
 
