@@ -12,6 +12,7 @@ deja de avanzar, se reanuda desde el último checkpoint. No hace falta sudo.
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import signal
@@ -44,8 +45,15 @@ T = 300.0
 N_EQ = 400_000
 N_PROD = 500_000
 SEED = 42
-# 32 hilos por réplica saturan los FPU compartidos del Opteron; 64 hilos en un
-# solo proceso no baja el tiempo de pared. Dos réplicas cubren los 64 núcleos.
+# Hilos medidos en este Opteron. En las cajas chicas 32 hilos no caben: los
+# átomos de un mismo paso tienen que quedar a más de 9.5 Å.
+REPARTO = {
+    240: (1, 64),
+    960: (8, 8),
+    2160: (16, 4),
+    4860: (32, 2),
+    8640: (32, 2),
+}
 THREADS_POR_REPLICA = 32
 FREEZE_S = 600.0
 MAX_REINTENTOS = 6
@@ -56,11 +64,30 @@ HILOS = 1
 N_REPLICAS = 1
 
 
+def configurar(n_atoms: int) -> None:
+    global N_ATOMS, P, Q, RUN, DATOS, LOGS, CKPT, PROBE, ESTADO, PLAN, PIDFILE
+    global THREADS_POR_REPLICA
+    if n_atoms not in REPARTO:
+        sys.exit(f"N={n_atoms} no está en la Tabla I hasta 8640")
+    N_ATOMS = n_atoms
+    P, Q = paper_size(n_atoms)
+    THREADS_POR_REPLICA = REPARTO[n_atoms][0]
+    RUN = ROOT / "results" / f"n{n_atoms}"
+    DATOS = RUN / "datos"
+    LOGS = RUN / "logs"
+    CKPT = RUN / "checkpoints"
+    PROBE = RUN / "probe"
+    ESTADO = RUN / "estado.txt"
+    PLAN = RUN / "plan.json"
+    PIDFILE = RUN / "pipeline.pid"
+
+
 def aplicar_reparto() -> None:
     global HILOS, N_REPLICAS
     nproc = os.cpu_count() or 1
-    HILOS = min(THREADS_POR_REPLICA, nproc)
-    N_REPLICAS = max(1, nproc // HILOS)
+    pedido, replicas = REPARTO[N_ATOMS]
+    HILOS = min(pedido, nproc)
+    N_REPLICAS = max(1, min(replicas, nproc // HILOS))
 
 
 def exigir_venv() -> None:
@@ -266,7 +293,7 @@ def medir() -> int:
             "--T",
             str(T),
             "--n-eq",
-            "30",
+            "200",
             "--n-prod",
             "0",
             "--sample-every",
@@ -283,7 +310,7 @@ def medir() -> int:
             str(HILOS),
         ]
     )
-    t_paso = (time.perf_counter() - t0) / 30.0
+    t_paso = (time.perf_counter() - t0) / 200.0
     t1 = time.perf_counter()
     correr(
         [
@@ -512,6 +539,9 @@ def cerrar() -> int:
     (RUN / "contraste_paper.txt").write_text(texto, encoding="utf-8")
     print(texto, flush=True)
     (RUN / "COMPLETO").write_text(time.strftime("%Y-%m-%d %H:%M:%S") + "\n", encoding="utf-8")
+    if N_ATOMS != 8640:
+        escribir_estado("contraste listo")
+        return 0
     r = subprocess.run(
         [sys.executable, "-m", "pytest", "-q", "tests/test_n8640_paper.py"],
         cwd=str(ROOT),
@@ -521,6 +551,11 @@ def cerrar() -> int:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--n", type=int, default=8640)
+    parser.add_argument("--sin-preflight", action="store_true")
+    args = parser.parse_args()
+    configurar(args.n)
     exigir_venv()
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, al_senal)
@@ -543,8 +578,9 @@ def main() -> None:
         f"núcleos={N_REPLICAS * HILOS}  RAM libre {mem_disponible_gib():.1f} GiB",
         flush=True,
     )
-    escribir_estado("preflight")
-    preflight()
+    escribir_estado("preflight" if not args.sin_preflight else "sin preflight")
+    if not args.sin_preflight:
+        preflight()
     sample_every = medir()
     global REPLICAS
     REPLICAS = [Replica(i) for i in range(N_REPLICAS)]
