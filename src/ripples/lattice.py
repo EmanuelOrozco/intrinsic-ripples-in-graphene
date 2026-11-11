@@ -9,6 +9,16 @@ import numpy as np
 A_CC = 1.42  # Å, distancia conjugada C–C del paper
 KB_EV = 8.617333262145e-5  # eV / K
 KAPPA_300K = 1.1  # eV, rigidez de flexión usada en G0(q) a 300 K
+MAX_N = 8640
+# Misma proporción Lx/Ly que N=240 (p/q = 10/6). L > 70 Å, así que q≈0.1 Å⁻¹ cabe en la caja.
+PAPER_SIZES = {240: (10, 6), 8640: (60, 36)}
+
+
+def paper_size(n_atoms: int) -> tuple[int, int]:
+    """(p, q) de la familia de la Tabla I. N = 4 p q."""
+    if n_atoms not in PAPER_SIZES:
+        raise ValueError(f"N={n_atoms} no está tabulado (240 o 8640)")
+    return PAPER_SIZES[n_atoms]
 
 
 def paper_box(p: int = 10, q: int = 6) -> tuple[float, float, int]:

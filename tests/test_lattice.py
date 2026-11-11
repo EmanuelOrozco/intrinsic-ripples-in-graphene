@@ -48,6 +48,20 @@ def test_cc_bond_length():
     assert np.allclose(d, A_CC, atol=1e-9)
 
 
+def test_n8640_reaches_ripple_scale():
+    """N=8640 conserva el aspecto de N=240 y entra en la escala de 70 Å del paper."""
+    from ripples.lattice import paper_size
+
+    p, q = paper_size(8640)
+    lx, ly, n = paper_box(p, q)
+    assert (p, q) == (60, 36)
+    assert n == 8640
+    assert lx > 70.0
+    assert ly > 70.0
+    qmin = 2.0 * np.pi / max(lx, ly)
+    assert qmin < 2.0 * np.pi / 70.0
+
+
 def test_area_per_atom_graphene():
     lx, ly, n = paper_box(10, 6)
     s0 = lx * ly / n
