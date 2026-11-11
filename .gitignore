@@ -21,10 +21,20 @@ src/c/graphene_mc
 src/c/*.o
 src/c/*.so
 
-# Simulation output (regenerated on the cluster)
-results/
+# Simulation output. The published N=8640 run is tracked; scratch stays local.
+results/*
+!results/n8640/
+results/n8640/*
+!results/n8640/datos/
+!results/n8640/datos/**
+!results/n8640/graficas/
+!results/n8640/graficas/**
+!results/n8640/contraste_paper.txt
+!results/n8640/COMPLETO
+!results/n8640/estado.txt
+!results/n8640/plan.json
 
-# LaTeX auxiliaries and compiled notes
+# LaTeX auxiliaries. The compiled notes of this reimplementation are tracked.
 *.aux
 *.log
 *.out
@@ -33,6 +43,8 @@ results/
 *.fdb_latexmk
 *.synctex.gz
 docs/*.pdf
+!docs/reimplementacion.pdf
+!docs/resultados_n8640.pdf
 
 # Reference PDF stays local
 references/

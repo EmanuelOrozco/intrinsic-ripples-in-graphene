@@ -1,0 +1,15 @@
+fase: terminado
+actualizado: 2026-11-10 04:23:27
+pid del pipeline: 3374203
+N=8640  p=60  q=36  T=300 K  eq=400000  prod=500000
+réplicas=2  hilos por réplica=32  núcleos en uso=64  RAM libre=122.2 GiB
+
+Para mirar esto sin la sesión de trabajo:
+  /home/eavelas/magnetic_graphene/.venv/bin/python /home/eavelas/magnetic_graphene/intrinsic-ripples-in-graphene/scripts/estado_n8640.py
+
+ritmo: 13.3 ms/paso, 0.41 s/muestra, muestra cada 1667 pasos. Pared estimada por réplica: 3.4 h.
+
+réplica 00  lista       paso 900000/900000 (100.0%)  reintentos=0  congeladas=0  heartbeat=12 s
+réplica 01  lista       paso 900000/900000 (100.0%)  reintentos=0  congeladas=0  heartbeat=123 s
+
+vivas=0  listas=2  fallidas=0  total=2

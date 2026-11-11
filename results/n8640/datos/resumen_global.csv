@@ -1,0 +1,2 @@
+n_replicas,h_rms_mean,h_rms_std,E_over_N_mean,acc_move_mean,T,N
+2,0.469863,0.074712,-7.938749,0.3917,300,8640

@@ -1,0 +1,22 @@
+Contraste con Fasolino, Los y Katsnelson, arXiv:0704.1793
+
+Réplicas 2   N=8640   T=300 K
+Caja 149.52 × 155.38 Å   S0=2.689 Å²
+q_min=0.0404 Å⁻¹   q(70 Å)=0.0898 Å⁻¹
+La caja supera 70 Å: True.
+La ventana q≈0.1 Å⁻¹ es accesible: True.
+h_rms = 0.4699 ± 0.0747 Å
+E/N = -7.9387 eV/átomo
+Aceptación de movimientos = 39.2 %
+Pico de g(r) entre 1.2 y 1.65 Å = 1.445 Å (el paper marca 1.42 Å a 300 K).
+Mediana G/G0 en q=0.06–0.20 = 0.403
+Mediana G/G0 en q=0.40–1.20 = 0.751
+Máximo interior de G(q) cerca de 0.1 Å⁻¹: sí.
+
+G0(q)/N = T / (κ S0 q²), con κ = 1.1 eV, es la referencia armónica de las Figs. 3 y 4.
+El paper dice que las muestras más cortas que ~70 Å no muestran el máximo de G(q)
+en q≈0.1 Å⁻¹, y que las más largas sí. Ese máximo lo atribuyen al canal de
+conjugación de LCBOPII. Aquí el potencial es Tersoff de Lindsay–Broido, de la
+misma clase (orden de enlace) pero sin ese canal, así que el máximo puede no aparecer.
+La prueba de cordura es que G(q) quede en el orden de G0, con ondulaciones, g(r)
+centrado en el enlace conjugado y la caja en el régimen de la figura grande.

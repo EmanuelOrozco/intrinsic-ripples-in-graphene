@@ -1,0 +1,9 @@
+{
+  "sample_every": 1667,
+  "sec_per_step": 0.013333,
+  "sec_per_sample": 0.41116921914120513,
+  "horas_mc_por_replica": 3.33325,
+  "horas_muestras_por_replica": 0.034257250145071416,
+  "workers": 2,
+  "threads": 32
+}
