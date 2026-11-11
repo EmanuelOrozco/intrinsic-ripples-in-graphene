@@ -48,6 +48,28 @@ def test_cc_bond_length():
     assert np.allclose(d, A_CC, atol=1e-9)
 
 
+def test_table_i_sizes_up_to_8640():
+    """Cada N de la Tabla I con N<=8640: p, q, N=4pq y la caja del paper."""
+    from ripples.lattice import PAPER_SIZES, TABLE_I_BOX, paper_size
+
+    assert list(PAPER_SIZES) == [240, 960, 2160, 4860, 8640]
+    for n_atoms, (p, q) in PAPER_SIZES.items():
+        assert paper_size(n_atoms) == (p, q)
+        lx, ly, n = paper_box(p, q)
+        assert n == n_atoms
+        exp_lx, exp_ly = TABLE_I_BOX[n_atoms]
+        # N=960: el Lx impreso (49.29) no es p|a1|; la geometría sigue a las demás filas.
+        tol = 0.15 if n_atoms == 960 else 0.02
+        assert lx == pytest.approx(exp_lx, abs=tol)
+        assert ly == pytest.approx(exp_ly, abs=0.02)
+        largo = max(lx, ly)
+        if n_atoms <= 960:
+            assert largo < 70.0
+        else:
+            assert min(lx, ly) > 70.0
+            assert 2.0 * np.pi / largo < 2.0 * np.pi / 70.0
+
+
 def test_n8640_reaches_ripple_scale():
     """N=8640 conserva el aspecto de N=240 y entra en la escala de 70 Å del paper."""
     from ripples.lattice import paper_size
