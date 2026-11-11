@@ -11,23 +11,9 @@ else
   echo "No se encontró tectonic"
   exit 1
 fi
-"$TECTONIC" --keep-logs reimplementacion.tex
-"$TECTONIC" --keep-logs resultados.tex
-if [ -f resultados_n8640_macros.tex ]; then
-  "$TECTONIC" --keep-logs resultados_n8640.tex
-  echo "PDF: $ROOT/resultados_n8640.pdf"
-fi
-if [ -f resultados_tabla.tex ]; then
-  "$TECTONIC" --keep-logs resultados_tabla.tex
-  echo "PDF: $ROOT/resultados_tabla.pdf"
-fi
-if [ -f informe_reimplementacion.tex ]; then
-  "$TECTONIC" --keep-logs informe_reimplementacion.tex
-  echo "PDF: $ROOT/informe_reimplementacion.pdf"
-fi
-if [ -f informe_codigo.tex ]; then
-  "$TECTONIC" --keep-logs informe_codigo.tex
-  echo "PDF: $ROOT/informe_codigo.pdf"
-fi
-echo "PDF: $ROOT/reimplementacion.pdf"
-echo "PDF: $ROOT/resultados.pdf"
+"$TECTONIC" --keep-logs resultados_tabla.tex
+"$TECTONIC" --keep-logs informe_reimplementacion.tex
+"$TECTONIC" --keep-logs informe_codigo.tex
+echo "PDF: $ROOT/resultados_tabla.pdf"
+echo "PDF: $ROOT/informe_reimplementacion.pdf"
+echo "PDF: $ROOT/informe_codigo.pdf"

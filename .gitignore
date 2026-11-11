@@ -8,14 +8,6 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
-# Mojo toolchain and local build
-src/mojo/.pixi/
-src/mojo/graphene_mc
-src/mojo/probe*.mojo
-src/mojo/x.mojo
-src/mojo/t.txt
-src/mojo/t2.txt
-
 # C/OpenMP build products
 src/c/graphene_mc
 src/c/*.o
@@ -48,10 +40,7 @@ results/tabla/*
 *.fdb_latexmk
 *.synctex.gz
 docs/*.pdf
-!docs/reimplementacion.pdf
-!docs/resultados_n8640.pdf
 !docs/resultados_tabla.pdf
-
 !docs/informe_reimplementacion.pdf
 !docs/informe_codigo.pdf
 

@@ -113,7 +113,6 @@ def figuras(filas: list[dict]) -> None:
     ax.legend(frameon=False, fontsize=8, loc="lower left")
     _ejes_papel(ax)
     fig.savefig(GRAF / "Gq_fig3.png", dpi=170, bbox_inches="tight")
-    fig.savefig(GRAF / "Gq_tabla.png", dpi=170, bbox_inches="tight")
     plt.close(fig)
 
     fig, axes = plt.subplots(1, 2, figsize=(8.6, 4.0), gridspec_kw={"width_ratios": [1.35, 1]})
