@@ -25,5 +25,9 @@ if [ -f informe_reimplementacion.tex ]; then
   "$TECTONIC" --keep-logs informe_reimplementacion.tex
   echo "PDF: $ROOT/informe_reimplementacion.pdf"
 fi
+if [ -f informe_codigo.tex ]; then
+  "$TECTONIC" --keep-logs informe_codigo.tex
+  echo "PDF: $ROOT/informe_codigo.pdf"
+fi
 echo "PDF: $ROOT/reimplementacion.pdf"
 echo "PDF: $ROOT/resultados.pdf"
