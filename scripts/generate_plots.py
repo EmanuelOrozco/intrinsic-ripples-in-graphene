@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import glob
 import sys
 from pathlib import Path
@@ -23,6 +24,18 @@ from ripples.observables import G0_harmonic, cluster_shells  # noqa: E402
 DATOS = ROOT / "results" / "datos"
 GRAF = ROOT / "results" / "graficas"
 T = 300.0
+
+
+def sistema() -> tuple[int, float]:
+    files = sorted(DATOS.glob("replica_*_summary.csv"))
+    if not files:
+        return 240, 2.62
+    ns, s0s = [], []
+    for path in files:
+        s = np.genfromtxt(path, delimiter=",", names=True)
+        ns.append(int(float(np.atleast_1d(s["N"])[0])))
+        s0s.append(float(np.atleast_1d(s["S0"])[0]))
+    return int(np.median(ns)), float(np.mean(s0s))
 
 
 def guardar(fig, nombre: str) -> None:
@@ -46,13 +59,14 @@ def plot_snapshot():
     h = z - z.mean()
     lx, ly = float(data["lx"][0]), float(data["ly"][0])
 
+    n_atoms, _ = sistema()
     fig = plt.figure(figsize=(7.2, 5.6))
     ax = fig.add_subplot(111, projection="3d")
     sc = ax.scatter(x, y, z, c=h, cmap="coolwarm", s=18, depthshade=True)
     ax.set_xlabel("x (Å)")
     ax.set_ylabel("y (Å)")
     ax.set_zlabel("z (Å)")
-    ax.set_title(f"Instantánea N=240, T=300 K  (caja {lx:.2f}×{ly:.2f} Å)")
+    ax.set_title(f"Instantánea N={n_atoms}, T=300 K  (caja {lx:.2f}×{ly:.2f} Å)")
     fig.colorbar(sc, ax=ax, shrink=0.6, label="h (Å)")
     guardar(fig, "snapshot_3d.png")
 
@@ -120,12 +134,13 @@ def plot_gq():
     if not files:
         return
     q, g = _promedio_modos(files)
-    q_hi, g_hi = _modos_instantaneas()
-    if q_hi.size:
-        # Por debajo de la malla guardada manda el promedio de producción.
-        extra = q_hi > q.max()
-        q = np.concatenate([q, q_hi[extra]])
-        g = np.concatenate([g, g_hi[extra]])
+    n_atoms, s0 = sistema()
+    if q.size and float(np.max(q)) < 4.5 and n_atoms <= 400:
+        q_hi, g_hi = _modos_instantaneas()
+        if q_hi.size:
+            extra = q_hi > q.max()
+            q = np.concatenate([q, q_hi[extra]])
+            g = np.concatenate([g, g_hi[extra]])
     # La Fig. 3 llega al segundo Bragg (5.11 Å⁻¹). Cada estrella de |q| aporta
     # su mediana; el trazo une esas medianas en log-log, como la curva lisa
     # del paper. Los escalones de la malla discreta de N=240 no se dibujan.
@@ -143,22 +158,18 @@ def plot_gq():
     g_line = 10.0 ** np.interp(np.log10(q_line), np.log10(q_b), np.log10(g_b))
 
     summaries = sorted(DATOS.glob("replica_*_summary.csv"))
-    s0 = 2.62
-    if summaries:
-        s0s = []
-        for p in summaries:
-            s = np.genfromtxt(p, delimiter=",", names=True)
-            s0s.append(float(np.atleast_1d(s["S0"])[0]))
-        s0 = float(np.mean(s0s))
-    # Misma ventana que la Fig. 3: la recta G0 cruza de ~1 a ~10⁻³.
-    q_th = np.logspace(np.log10(0.05), np.log10(6.0), 400)
-    g0 = G0_harmonic(q_th, 240, s0, T=T, kappa=KAPPA_300K)
+    if not summaries:
+        s0 = 2.62
+    q_lo = max(0.03, float(q.min()) * 0.9) if q.size else 0.05
+    q_th = np.logspace(np.log10(q_lo), np.log10(6.0), 400)
+    g0 = G0_harmonic(q_th, n_atoms, s0, T=T, kappa=KAPPA_300K)
 
     fig, ax = plt.subplots(figsize=(5.6, 4.8))
     ax.loglog(q_th, g0, color="#d62728", lw=1.3, label=r"$G_0(q)$", zorder=2)
-    ax.loglog(q_line, g_line, color="#2ca02c", lw=1.8, label="240", zorder=3)
-    ax.set_xlim(0.05, 6.0)
-    ax.set_ylim(1.0e-3, 1.0)
+    ax.loglog(q_line, g_line, color="#2ca02c", lw=1.8, label=str(n_atoms), zorder=3)
+    ax.set_xlim(q_lo, 6.0)
+    if n_atoms <= 300:
+        ax.set_ylim(1.0e-3, 1.0)
     ax.set_xlabel(r"$q$ (Å$^{-1}$)")
     ax.set_ylabel(r"$G(q)/N$")
     ax.legend(frameon=False, loc="center left", fontsize=10)
@@ -196,7 +207,7 @@ def plot_rdf():
     ax.set_xlabel("r (Å)")
     ax.set_ylabel("g(r)")
     ax.set_xlim(0, 3.5)
-    ax.set_title("Función de distribución radial, N=240, T=300 K")
+    ax.set_title(f"Función de distribución radial, N={sistema()[0]}, T=300 K")
     ax.legend(fontsize=8)
     guardar(fig, "rdf.png")
     np.savetxt(
@@ -212,11 +223,12 @@ def plot_trace():
     files = sorted(DATOS.glob("replica_*_trace.csv"))
     if not files:
         return
+    n_atoms = sistema()[0]
     fig, axes = plt.subplots(2, 1, figsize=(7.0, 6.2), sharex=True)
     for f in files:
         d = np.genfromtxt(f, delimiter=",", names=True)
         axes[0].plot(d["step"], d["h_rms"], lw=0.8, alpha=0.75)
-        axes[1].plot(d["step"], d["energy"] / 240.0, lw=0.8, alpha=0.75)
+        axes[1].plot(d["step"], d["energy"] / n_atoms, lw=0.8, alpha=0.75)
     axes[0].set_ylabel(r"$h_{\mathrm{rms}}$ (Å)")
     axes[0].set_title("Equilibrio de altura y energía (réplicas independientes)")
     axes[1].set_ylabel("E/N (eV/átomo)")
@@ -258,15 +270,25 @@ def plot_summary_table_png():
     ax.set_title("Altura RMS por réplica (producción)")
     ax.legend()
     guardar(fig, "hrms_replicas.png")
+    n_atoms, _ = sistema()
     with (DATOS / "resumen_global.csv").open("w", encoding="utf-8") as fh:
         fh.write("n_replicas,h_rms_mean,h_rms_std,E_over_N_mean,acc_move_mean,T,N\n")
         fh.write(
             f"{len(rows)},{hrms.mean():.6f},{hrms.std():.6f},"
-            f"{(en/240).mean():.6f},{acc.mean():.4f},300,240\n"
+            f"{(en / n_atoms).mean():.6f},{acc.mean():.4f},300,{n_atoms}\n"
         )
 
 
 def main():
+    global DATOS, GRAF
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--datos", type=Path, default=None)
+    parser.add_argument("--graf", type=Path, default=None)
+    args = parser.parse_args()
+    if args.datos is not None:
+        DATOS = args.datos
+    if args.graf is not None:
+        GRAF = args.graf
     plot_snapshot()
     plot_gq()
     plot_rdf()
