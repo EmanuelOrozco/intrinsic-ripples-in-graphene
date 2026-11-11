@@ -40,6 +40,14 @@ def test_c_energy_matches_python_small_cell():
 
 
 @pytest.mark.skipif(not BIN.exists(), reason="compilar graphene_mc primero")
+def test_c_n8640_matches_brute_force():
+    out = _run_c(["--self-test-large"])
+    assert "PASS" in out
+    assert "N=8640" in out
+    assert "nn_malos=0" in out
+
+
+@pytest.mark.skipif(not BIN.exists(), reason="compilar graphene_mc primero")
 def test_flat_graphene_is_bound():
     line = _run_c(["--energy-only", "--p", "10", "--q", "6"]).strip().split()
     e, lx, ly, n = map(float, line)
