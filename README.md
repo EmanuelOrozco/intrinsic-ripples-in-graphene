@@ -9,7 +9,7 @@ Atomistic reimplementation of Fasolino, Los and Katsnelson, arXiv:0704.1793, res
 - [Pixi](https://pixi.sh) and a Mojo 1.2 toolchain if you use the default backend
 - `tectonic` only if you want to rebuild the notes in `docs/`
 
-The preprint this reimplementation follows is [`references/Intrinsic_ripples_in_graphene.pdf`](references/Intrinsic_ripples_in_graphene.pdf) (arXiv:0704.1793v1).
+The preprint this reimplementation follows is [`references/Intrinsic_ripples_in_graphene.pdf`](references/Intrinsic_ripples_in_graphene.pdf). Copyright in that file stays with its authors; see [Copyright](#copyright).
 
 ## Setup
 
@@ -61,6 +61,14 @@ The largest sheet in this reimplementation is \(N = 8640\) (`p = 60`, `q = 36`),
 ```
 
 Output, checkpoints and the comparison with the paper land in `results/n8640/`. The written comparison is `docs/resultados_n8640.tex`.
+
+## Copyright
+
+The file [`references/Intrinsic_ripples_in_graphene.pdf`](references/Intrinsic_ripples_in_graphene.pdf) is the arXiv preprint of the paper this repository reimplements. It is included so the simulation can be compared with the original figures. Copyright in that work remains with the authors:
+
+A. Fasolino, J. H. Los and M. I. Katsnelson, “Intrinsic ripples in graphene,” arXiv:0704.1793v1 [cond-mat.mtrl-sci] (2007). Published as Nature Materials **6**, 858–861 (2007), https://doi.org/10.1038/nmat2011.
+
+Nothing in this repository transfers that copyright. The Monte Carlo code, the notes in `docs/`, and the figures produced by the runs are separate from the preprint.
 
 ## Notes
 
