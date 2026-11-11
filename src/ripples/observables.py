@@ -138,6 +138,44 @@ def cluster_shells(
     return np.array(q_out), np.array(g_out), np.array(e_out)
 
 
+def spectrum_curve(
+    q: np.ndarray,
+    g: np.ndarray,
+    tol: float = 0.04,
+    window: float = 0.10,
+    n_line: int = 400,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Curva lisa de la Fig. 3: mediana en una ventana logarítmica, no cada estrella.
+
+    Unir las estrellas de |q| una a una dibuja la sierra de la malla. La mediana
+    en ±`window` décadas sigue el modo térmico, que es lo que el paper traza
+    entre los picos de Bragg.
+    """
+    q = np.atleast_1d(np.asarray(q, dtype=np.float64)).ravel()
+    g = np.atleast_1d(np.asarray(g, dtype=np.float64)).ravel()
+    mask = (q > 0) & (q <= 6.05) & np.isfinite(q) & np.isfinite(g) & (g > 0)
+    q, g = q[mask], g[mask]
+    if q.size < 2:
+        return q, g
+    q_b, g_shell, _ = cluster_shells(q, g, tol=tol)
+    if q_b.size < 2:
+        return q_b, g_shell
+    lq = np.log10(q)
+    smooth = np.empty_like(q_b)
+    for i, qc in enumerate(q_b):
+        sel = np.abs(lq - np.log10(qc)) <= window
+        if int(np.count_nonzero(sel)) < 3:
+            sel = np.abs(lq - np.log10(qc)) <= max(window, 0.18)
+        smooth[i] = float(np.median(g[sel])) if np.any(sel) else float(g_shell[i])
+    ok = np.isfinite(q_b) & (q_b > 0) & np.isfinite(smooth) & (smooth > 0)
+    q_b, smooth = q_b[ok], smooth[ok]
+    if q_b.size < 2:
+        return q_b, smooth
+    q_line = np.logspace(np.log10(q_b[0]), np.log10(q_b[-1]), n_line)
+    g_line = 10.0 ** np.interp(np.log10(q_line), np.log10(q_b), np.log10(smooth))
+    return q_line, g_line
+
+
 def angular_shells(
     q: np.ndarray,
     g: np.ndarray,

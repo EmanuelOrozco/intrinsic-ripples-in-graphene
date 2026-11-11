@@ -18,8 +18,10 @@ from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+from matplotlib.ticker import LogFormatterMathtext, LogLocator, NullFormatter
+
 from ripples.lattice import KAPPA_300K  # noqa: E402
-from ripples.observables import G0_harmonic, cluster_shells  # noqa: E402
+from ripples.observables import G0_harmonic, spectrum_curve  # noqa: E402
 
 DATOS = ROOT / "results" / "datos"
 GRAF = ROOT / "results" / "graficas"
@@ -36,6 +38,15 @@ def sistema() -> tuple[int, float]:
         ns.append(int(float(np.atleast_1d(s["N"])[0])))
         s0s.append(float(np.atleast_1d(s["S0"])[0]))
     return int(np.median(ns)), float(np.mean(s0s))
+
+
+def _ejes_log(ax) -> None:
+    """Décadas limpias. El formateo por defecto llega a rotular 3×10^4×10^-6."""
+    for axis in (ax.xaxis, ax.yaxis):
+        axis.set_major_locator(LogLocator(base=10.0))
+        axis.set_major_formatter(LogFormatterMathtext(base=10.0))
+        axis.set_minor_formatter(NullFormatter())
+    ax.tick_params(which="both", direction="in", top=True, right=True)
 
 
 def guardar(fig, nombre: str) -> None:
@@ -60,14 +71,26 @@ def plot_snapshot():
     lx, ly = float(data["lx"][0]), float(data["ly"][0])
 
     n_atoms, _ = sistema()
+    # mplot3d iguala los tres ejes al rango de los datos: 2 Å de altura se ven
+    # como 70 Å de caja. Se amplía z un factor fijo y se dice en el título.
+    z_factor = 6.0
+    dx = max(float(np.ptp(x)), 1.0)
+    dy = max(float(np.ptp(y)), 1.0)
+    dz = max(float(np.ptp(z)), 1e-3)
     fig = plt.figure(figsize=(7.2, 5.6))
     ax = fig.add_subplot(111, projection="3d")
-    sc = ax.scatter(x, y, z, c=h, cmap="coolwarm", s=18, depthshade=True)
+    sc = ax.scatter(x, y, z, c=h, cmap="coolwarm", s=18 if n_atoms <= 2160 else 6, depthshade=False)
+    ax.set_box_aspect((dx, dy, z_factor * dz))
+    pad = 0.05 * dz
+    ax.set_zlim(float(z.min()) - pad, float(z.max()) + pad)
+    ax.set_zticks([-1.0, 0.0, 1.0])
     ax.set_xlabel("x (Å)")
     ax.set_ylabel("y (Å)")
     ax.set_zlabel("z (Å)")
-    ax.set_title(f"Instantánea N={n_atoms}, T=300 K  (caja {lx:.2f}×{ly:.2f} Å)")
-    fig.colorbar(sc, ax=ax, shrink=0.6, label="h (Å)")
+    ax.set_title(
+        f"Instantánea N={n_atoms}, T=300 K  (caja {lx:.2f}×{ly:.2f} Å, eje z ×{z_factor:.0f})"
+    )
+    fig.colorbar(sc, ax=ax, shrink=0.6, pad=0.12, label="h (Å)")
     guardar(fig, "snapshot_3d.png")
 
     fig, ax = plt.subplots(figsize=(6.4, 5.4))
@@ -141,48 +164,25 @@ def plot_gq():
             extra = q_hi > q.max()
             q = np.concatenate([q, q_hi[extra]])
             g = np.concatenate([g, g_hi[extra]])
-    # La Fig. 3 llega al segundo Bragg (5.11 Å⁻¹). Cada estrella de |q| aporta
-    # su mediana; el trazo une esas medianas en log-log, como la curva lisa
-    # del paper. Los escalones de la malla discreta de N=240 no se dibujan.
-    dentro = q <= 6.05
-    q, g = q[dentro], g[dentro]
-    q_b, _, g_e = cluster_shells(q, g, tol=0.04)
-    lq = np.log10(q)
-    g_b = np.empty_like(q_b)
-    for i, qc in enumerate(q_b):
-        sel = np.abs(lq - np.log10(qc)) <= 0.10
-        if np.count_nonzero(sel) < 3:
-            sel = np.abs(lq - np.log10(qc)) <= 0.18
-        g_b[i] = float(np.median(g[sel]))
-    q_line = np.logspace(np.log10(q_b[0]), np.log10(q_b[-1]), 500)
-    g_line = 10.0 ** np.interp(np.log10(q_line), np.log10(q_b), np.log10(g_b))
-
-    summaries = sorted(DATOS.glob("replica_*_summary.csv"))
-    if not summaries:
-        s0 = 2.62
-    q_lo = max(0.03, float(q.min()) * 0.9) if q.size else 0.05
-    q_th = np.logspace(np.log10(q_lo), np.log10(6.0), 400)
+    # Mismos ejes que la Fig. 3 del paper: q de 0.05 a 5, G/N de 1e-3 a 1.
+    # La curva es la mediana en ventana logarítmica, no cada estrella de |q|.
+    q_line, g_line = spectrum_curve(q, g)
+    q_th = np.logspace(np.log10(0.05), np.log10(5.0), 400)
     g0 = G0_harmonic(q_th, n_atoms, s0, T=T, kappa=KAPPA_300K)
 
-    fig, ax = plt.subplots(figsize=(5.6, 4.8))
+    fig, ax = plt.subplots(figsize=(4.9, 6.15))
+    ax.set_box_aspect(202.0 / 156.0)
     ax.loglog(q_th, g0, color="#d62728", lw=1.3, label=r"$G_0(q)$", zorder=2)
     ax.loglog(q_line, g_line, color="#2ca02c", lw=1.8, label=str(n_atoms), zorder=3)
-    ax.set_xlim(q_lo, 6.0)
-    if n_atoms <= 300:
-        ax.set_ylim(1.0e-3, 1.0)
+    ax.axvline(2.0 * np.pi / 70.0, color="0.35", ls=":", lw=0.9, zorder=1)
+    ax.axvline(4.0 * np.pi / (3.0 * 1.42), color="0.35", ls="--", lw=0.8, zorder=1)
+    ax.set_xlim(0.05, 5.0)
+    ax.set_ylim(1.0e-3, 1.0)
+    _ejes_log(ax)
     ax.set_xlabel(r"$q$ (Å$^{-1}$)")
     ax.set_ylabel(r"$G(q)/N$")
-    ax.legend(frameon=False, loc="center left", fontsize=10)
-    ax.tick_params(which="both", direction="in", top=True, right=True)
+    ax.legend(frameon=False, loc="lower left", fontsize=10)
     guardar(fig, "Gq_normal_normal.png")
-
-    np.savetxt(
-        DATOS / "gq_binned.csv",
-        np.column_stack([q_b, g_b, g_e]),
-        delimiter=",",
-        header="q,G_over_N,err",
-        comments="",
-    )
 
 
 def plot_rdf():

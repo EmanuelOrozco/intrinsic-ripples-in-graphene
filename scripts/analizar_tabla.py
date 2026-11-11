@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from contrastar_paper import hay_maximo, informe  # noqa: E402
 from ripples.lattice import PAPER_SIZES, TABLE_I_BOX, paper_box  # noqa: E402
-from ripples.observables import cluster_shells  # noqa: E402
+from ripples.observables import cluster_shells, spectrum_curve  # noqa: E402
 
 SIZES = [240, 960, 2160, 4860, 8640]
 Q_RIPPLE = 2.0 * np.pi / 70.0
@@ -100,9 +100,10 @@ def figuras(filas: list[dict]) -> None:
     g0 = G0_harmonic(q_th, 1, s0, T=300.0, kappa=KAPPA_300K)
     ax.loglog(q_th, g0, color="#d62728", lw=1.5, label=r"$G_0$", zorder=2)
     for info in filas:
-        q, g = np.asarray(info["q"]), np.asarray(info["g"])
-        qb, gb, _ = cluster_shells(q, g, tol=0.02)
-        ax.loglog(qb, gb, lw=1.25, color=COLORES[info["N"]], label=str(info["N"]), zorder=3)
+        q_line, g_line = spectrum_curve(info["q"], info["g"])
+        ax.loglog(
+            q_line, g_line, lw=1.35, color=COLORES[info["N"]], label=str(info["N"]), zorder=3
+        )
     ax.axvline(Q_RIPPLE, color="0.35", ls=":", lw=0.9, zorder=1)
     ax.axvline(BRAGG_1, color="0.35", ls="--", lw=0.8, zorder=1)
     ax.set_xlim(*FIG3_Q)
