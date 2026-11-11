@@ -17,5 +17,9 @@ if [ -f resultados_n8640_macros.tex ]; then
   "$TECTONIC" --keep-logs resultados_n8640.tex
   echo "PDF: $ROOT/resultados_n8640.pdf"
 fi
+if [ -f resultados_tabla.tex ]; then
+  "$TECTONIC" --keep-logs resultados_tabla.tex
+  echo "PDF: $ROOT/resultados_tabla.pdf"
+fi
 echo "PDF: $ROOT/reimplementacion.pdf"
 echo "PDF: $ROOT/resultados.pdf"

@@ -33,6 +33,11 @@ results/n8640/*
 !results/n8640/COMPLETO
 !results/n8640/estado.txt
 !results/n8640/plan.json
+!results/tabla/
+results/tabla/*
+!results/tabla/graficas/
+!results/tabla/graficas/**
+!results/tabla/contraste_tabla.txt
 
 # LaTeX auxiliaries. The compiled notes of this reimplementation are tracked.
 *.aux
@@ -45,6 +50,7 @@ results/n8640/*
 docs/*.pdf
 !docs/reimplementacion.pdf
 !docs/resultados_n8640.pdf
+!docs/resultados_tabla.pdf
 
 # Editors and OS
 .idea/
