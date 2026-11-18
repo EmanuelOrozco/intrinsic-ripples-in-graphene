@@ -31,6 +31,17 @@ results/tabla/*
 !results/tabla/graficas/
 !results/tabla/graficas/**
 !results/tabla/contraste_tabla.txt
+!results/lcbopii/
+results/lcbopii/*
+!results/lcbopii/tabla/
+results/lcbopii/tabla/*
+!results/lcbopii/tabla/graficas/
+!results/lcbopii/tabla/graficas/**
+!results/comparacion/
+results/comparacion/*
+!results/comparacion/graficas/
+!results/comparacion/graficas/**
+
 
 # LaTeX auxiliaries. The compiled notes of this reimplementation are tracked.
 *.aux
