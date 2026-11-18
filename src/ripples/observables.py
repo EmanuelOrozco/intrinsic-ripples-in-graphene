@@ -176,6 +176,39 @@ def spectrum_curve(
     return q_line, g_line
 
 
+def line_and_peaks(
+    q: np.ndarray,
+    g: np.ndarray,
+    factor: float = 3.0,
+    q_ratio: float = 1.025,
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    """Puntos de la mediana, y los modos que quedan por encima.
+
+    La mediana se muestrea para que los puntos se lean como la curva.
+    Un modo entra como pico si supera `factor` veces esa mediana.
+    """
+    q = np.atleast_1d(np.asarray(q, dtype=np.float64)).ravel()
+    g = np.atleast_1d(np.asarray(g, dtype=np.float64)).ravel()
+    mask = (q > 0) & np.isfinite(q) & np.isfinite(g) & (g > 0)
+    q, g = q[mask], g[mask]
+    empty = np.array([], dtype=np.float64)
+    if q.size < 2:
+        return q, g, empty, empty
+    q_line, g_line = spectrum_curve(q, g)
+    if q_line.size < 2:
+        return q_line, g_line, empty, empty
+    keep = [0]
+    for i in range(1, q_line.size):
+        if q_line[i] >= q_line[keep[-1]] * q_ratio:
+            keep.append(i)
+    if keep[-1] != q_line.size - 1:
+        keep.append(q_line.size - 1)
+    idx = np.asarray(keep)
+    q_ref = 10.0 ** np.interp(np.log10(q), np.log10(q_line), np.log10(g_line))
+    peak = g > factor * q_ref
+    return q_line[idx], g_line[idx], q[peak], g[peak]
+
+
 def angular_shells(
     q: np.ndarray,
     g: np.ndarray,

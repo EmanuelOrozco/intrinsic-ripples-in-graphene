@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Figuras del estudio LCBOPII (N<=4860) y de la comparación con Tersoff.
 
-Los espectros se dibujan con puntos: cada punto es la mediana de una
-estrella de |q|. Una línea fina solo une esos puntos.
+La curva de G(q) es la mediana, dibujada con puntos.
+Los modos que se disparan por encima se añaden para que se vean los picos.
+Los ejes son los de la Fig. 3 del paper.
 """
 
 from __future__ import annotations
@@ -22,7 +23,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from contrastar_paper import informe  # noqa: E402
 from ripples.lattice import KAPPA_300K  # noqa: E402
-from ripples.observables import G0_harmonic, cluster_shells  # noqa: E402
+from ripples.observables import G0_harmonic, line_and_peaks  # noqa: E402
 
 SIZES = [240, 960, 2160, 4860]
 COLORES = {240: "#1f77b4", 960: "#ff7f0e", 2160: "#2ca02c", 4860: "#d62728"}
@@ -48,11 +49,7 @@ def _ejes(ax) -> None:
 
 
 def cargar(base: Path, n: int) -> dict:
-    info = informe(base / f"n{n}" / "datos")
-    q, g, _ = cluster_shells(info["q"], info["g"], tol=0.05)
-    info["qb"] = q
-    info["gb"] = g
-    return info
+    return informe(base / f"n{n}" / "datos")
 
 
 def rdf(base: Path, n: int) -> tuple[np.ndarray, np.ndarray]:
@@ -62,20 +59,19 @@ def rdf(base: Path, n: int) -> tuple[np.ndarray, np.ndarray]:
 
 
 def serie_gq(ax, info: dict, marca: str, relleno: bool) -> None:
-    q, g = info["qb"], info["gb"]
-    sel = (q >= FIG3_Q[0]) & (q <= FIG3_Q[1]) & (g > 0)
-    kw = dict(
-        color=COLORES[info["N"]],
-        marker=MARCAS[info["N"]],
-        ms=5.0 if marca == "L" else 4.2,
-        ls="none",
-        markerfacecolor=COLORES[info["N"]] if relleno else "white",
-        markeredgecolor=COLORES[info["N"]],
-        markeredgewidth=0.8,
-        label=str(info["N"]),
-        zorder=3,
+    del marca, relleno
+    color = COLORES[info["N"]]
+    q_line, g_line, q_pk, g_pk = line_and_peaks(info["q"], info["g"])
+    ax.plot(
+        q_line, g_line,
+        color=color, marker="o", ms=1.7, ls="none",
+        markeredgewidth=0, label=str(info["N"]), zorder=3,
     )
-    ax.plot(q[sel], g[sel], **kw)
+    ax.plot(
+        q_pk, g_pk,
+        color=color, marker="o", ms=1.7, ls="none",
+        markeredgewidth=0, zorder=4,
+    )
 
 
 def marco_gq(ax, s0: float) -> None:
@@ -88,7 +84,7 @@ def marco_gq(ax, s0: float) -> None:
     ax.set_ylim(*FIG3_G)
     ax.set_xlabel(r"$q$ (Å$^{-1}$)")
     ax.set_ylabel(r"$G(q)/N$")
-    ax.legend(frameon=False, fontsize=8, loc="lower left")
+    ax.legend(frameon=False, fontsize=8, loc="lower left", markerscale=3)
     _ejes(ax)
 
 
