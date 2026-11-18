@@ -1,6 +1,11 @@
 # Intrinsic ripples in graphene
 
-Atomistic reimplementation of Fasolino, Los and Katsnelson, arXiv:0704.1793, for every Table I sheet up to \(N = 8640\) at \(300\,\mathrm{K}\). The Monte Carlo kernel is C with OpenMP (`src/c/graphene_mc.c`). Python holds the lattice, the Tersoff potential used by the tests, the observables, and the figures.
+Atomistic reimplementation of Fasolino, Los and Katsnelson, arXiv:0704.1793, for every Table I sheet up to \(N = 8640\) at \(300\,\mathrm{K}\). Two Monte Carlo kernels share the lattice, the observables, and the run protocol:
+
+- Tersoff (Lindsay–Broido), the finished campaign: `src/c/graphene_mc.c`
+- LCBOPII (Los et al., PRB 72, 214102): `src/c/graphene_lcbopii`, built from `lcbopii_mc.c` and `lcbopii_energy.c`
+
+Python holds the lattice, the Tersoff potential used by the tests, the observables, and the figures.
 
 ## What you need
 
@@ -26,14 +31,16 @@ pytest
 
 ## Layout
 
-- `src/c/` is the Monte Carlo kernel. `src/ripples/` is the lattice, the potential, and the observables.
-- `scripts/pipeline_tabla.py` runs the five sizes one after another. `scripts/pipeline_n8640.py` runs a single size. `scripts/analizar_tabla.py` draws the comparison.
-- `results/n240`, `results/n960`, `results/n2160`, `results/n4860`, and `results/n8640` hold one finished size each. `results/tabla/graficas/` holds the figures shared by the notes.
-- `docs/` holds the three notes below. `references/` holds the preprint.
+- `src/c/graphene_mc.c` is the Tersoff kernel. `src/c/lcbopii_energy.c` is the LCBOPII energy, and `src/c/lcbopii_mc.c` is its Monte Carlo driver. `src/ripples/` is the lattice, the Tersoff potential, and the observables.
+- `scripts/pipeline_tabla.py` runs the five Tersoff sizes. `scripts/pipeline_lcbopii.py` runs the same sizes with LCBOPII and writes `results/lcbopii/`. `scripts/pipeline_n8640.py` runs one size; `--potencial` chooses the kernel and defaults to Tersoff.
+- `results/n240` … `results/n8640` are the Tersoff runs. `results/lcbopii/n240` … `n4860` are the finished LCBOPII runs. `results/tabla/graficas/` holds the Tersoff figures. `results/lcbopii/tabla/graficas/` and `results/comparacion/graficas/` hold the LCBOPII figures and the comparison.
+- `docs/` holds the notes below. `references/` holds the preprint.
 
 ## Reports
 
-- `docs/informe_reimplementacion.pdf` is the report: the five sizes against Figs. 1, 3, and 5, and why each choice was made.
+- `docs/informe_tersoff.pdf` is the Tersoff campaign: the five sizes against Figs. 1, 3, and 5.
+- `docs/informe_lcbopii.pdf` is the LCBOPII campaign for \(N = 240, 960, 2160, 4860\).
+- `docs/informe_comparacion.pdf` compares the two potentials, the error of each, and which one to keep implementing.
 - `docs/informe_codigo.pdf` walks through the simulation and names the function for each step.
 
 Rebuild them with `docs/compilar.sh`.
@@ -47,6 +54,14 @@ From the repository, with the virtualenv that lives next to it:
 ```
 
 That uses all 64 hardware threads, \(4\times 10^5\) equilibration steps and \(5\times 10^5\) production steps at \(300\,\mathrm{K}\), and skips a size that already has `results/nN/COMPLETO`. Check it later with `../.venv/bin/python scripts/estado_tabla.py`.
+
+The LCBOPII campaign is the same protocol and does not overwrite the Tersoff results:
+
+```bash
+../.venv/bin/python scripts/pipeline_lcbopii.py
+```
+
+Check it with `../.venv/bin/python scripts/estado_lcbopii.py`.
 
 ## Copyright
 

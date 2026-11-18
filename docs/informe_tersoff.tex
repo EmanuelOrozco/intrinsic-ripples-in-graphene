@@ -25,7 +25,7 @@
 \renewcommand{\floatpagefraction}{0.8}
 \setcounter{topnumber}{2}
 \setcounter{totalnumber}{3}
-\title{Informe de la reimplementación\\[0.35em]
+\title{Informe con el potencial de Tersoff\\[0.35em]
 \large Ondulaciones intrínsecas del grafeno, hasta $N=8640$}
 \author{Emanuel Orozco Gallego}
 \date{11 de noviembre de 2026}
@@ -37,8 +37,9 @@ Este informe junta la comparación con el paper y la explicación de cada decisi
 Se repitió el Monte Carlo de Fasolino, Los y Katsnelson (2007) a $300\,\mathrm{K}$,
 en las cinco cajas de la Tabla~I con $N\le 8640$.
 La receta, las cajas y la temperatura coinciden con el artículo.
-El potencial no: aquí es Tersoff de Lindsay--Broido, y el del paper es LCBOPII.
-Por eso no aparece el pico agudo de unos $70\,\text{\AA}$ ni el comportamiento a $3500\,\mathrm{K}$.
+El potencial de este informe es Tersoff de Lindsay--Broido.
+El del paper es LCBOPII, y esa campaña está en el informe aparte.
+Por eso aquí no aparece el pico agudo de unos $70\,\text{\AA}$ ni el comportamiento a $3500\,\mathrm{K}$.
 El resto de las diferencias de las figuras son de dibujo o de un estimador distinto.
 \end{abstract}
 
@@ -99,10 +100,10 @@ Estas piezas se dejaron como en el artículo.
 
 El paper evalúa la energía con LCBOPII.
 Ese potencial permite que un enlace pase de conjugado a parcialmente doble o simple, y liga ese cambio a la salida del plano.
-LCBOPII no está disponible aquí como biblioteca.
-Se usó Tersoff en la parametrización de Lindsay y Broido, hecha para el grafeno.
+Este informe usa Tersoff en la parametrización de Lindsay y Broido, hecha para el grafeno.
 Es de la misma familia: la fuerza del enlace depende de los vecinos.
 No tiene el canal de conjugación de largo alcance de LCBOPII.
+La campaña con LCBOPII y la comparación de los dos métodos están en los otros dos informes.
 
 Con Tersoff se comprueba la receta, la caja, el enlace y la parte elástica de la ondulación.
 No se comprueba la afirmación central del paper: que el carbono fija un largo de unos $70\,\text{\AA}$ porque sus enlaces cambian de tipo.
@@ -303,6 +304,7 @@ Igualar el pico agudo de $70\,\text{\AA}$, los hombros de $g(r)$ y el corrimient
 Esa es la novedad del paper.
 No se responde con Tersoff, ni alargando la simulación, ni retocando la gráfica.
 Hace falta LCBOPII y, para las Figs.~4 y~5, correr además a $3500\,\mathrm{K}$.
+La campaña con LCBOPII ya se corrió a $300\,\mathrm{K}$ hasta $N=4860$; ese resultado no se mezcla con las tablas de este informe.
 
 Igualar el dibujo de los dos picos de Bragg a altura 1 no cambia esa conclusión.
 Son la red cristalina.

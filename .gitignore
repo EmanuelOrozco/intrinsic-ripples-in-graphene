@@ -10,6 +10,7 @@ __pycache__/
 
 # C/OpenMP build products
 src/c/graphene_mc
+src/c/graphene_lcbopii
 src/c/*.o
 src/c/*.so
 
@@ -40,7 +41,9 @@ results/tabla/*
 *.fdb_latexmk
 *.synctex.gz
 docs/*.pdf
-!docs/informe_reimplementacion.pdf
+!docs/informe_tersoff.pdf
+!docs/informe_lcbopii.pdf
+!docs/informe_comparacion.pdf
 !docs/informe_codigo.pdf
 
 # Editors and OS
