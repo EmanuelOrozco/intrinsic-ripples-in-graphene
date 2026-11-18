@@ -30,6 +30,7 @@ from ripples.lattice import paper_size  # noqa: E402
 
 VENV = ROOT.parent / ".venv"
 BIN = ROOT / "src" / "c" / "graphene_mc"
+POTENCIAL = "tersoff"
 RUN = ROOT / "results" / "n8640"
 DATOS = RUN / "datos"
 LOGS = RUN / "logs"
@@ -47,13 +48,23 @@ N_PROD = 500_000
 SEED = 42
 # Hilos medidos en este Opteron. En las cajas chicas 32 hilos no caben: los
 # átomos de un mismo paso tienen que quedar a más de 9.5 Å.
-REPARTO = {
+REPARTO_TERSOFF = {
     240: (1, 64),
     960: (8, 8),
     2160: (16, 4),
     4860: (32, 2),
     8640: (32, 2),
 }
+# El corte de LCBOPII es 6 Å, así que dos movimientos del mismo paso tienen
+# que quedar a más de 13 Å. En las cajas chicas caben menos hilos.
+REPARTO_LCBOPII = {
+    240: (1, 64),
+    960: (4, 16),
+    2160: (8, 8),
+    4860: (16, 4),
+    8640: (32, 2),
+}
+REPARTO = REPARTO_TERSOFF
 THREADS_POR_REPLICA = 32
 FREEZE_S = 600.0
 MAX_REINTENTOS = 6
@@ -64,15 +75,26 @@ HILOS = 1
 N_REPLICAS = 1
 
 
-def configurar(n_atoms: int) -> None:
+def configurar(n_atoms: int, potencial: str = "tersoff") -> None:
     global N_ATOMS, P, Q, RUN, DATOS, LOGS, CKPT, PROBE, ESTADO, PLAN, PIDFILE
-    global THREADS_POR_REPLICA
+    global THREADS_POR_REPLICA, BIN, REPARTO, POTENCIAL
+    if potencial == "lcbopii":
+        BIN = ROOT / "src" / "c" / "graphene_lcbopii"
+        REPARTO = REPARTO_LCBOPII
+        base = ROOT / "results" / "lcbopii"
+    elif potencial == "tersoff":
+        BIN = ROOT / "src" / "c" / "graphene_mc"
+        REPARTO = REPARTO_TERSOFF
+        base = ROOT / "results"
+    else:
+        sys.exit(f"potencial desconocido: {potencial}")
+    POTENCIAL = potencial
     if n_atoms not in REPARTO:
         sys.exit(f"N={n_atoms} no está en la Tabla I hasta 8640")
     N_ATOMS = n_atoms
     P, Q = paper_size(n_atoms)
     THREADS_POR_REPLICA = REPARTO[n_atoms][0]
-    RUN = ROOT / "results" / f"n{n_atoms}"
+    RUN = base / f"n{n_atoms}"
     DATOS = RUN / "datos"
     LOGS = RUN / "logs"
     CKPT = RUN / "checkpoints"
@@ -192,6 +214,7 @@ def escribir_estado(fase: str, extra: str = "") -> None:
         f"fase: {fase}",
         f"actualizado: {time.strftime('%Y-%m-%d %H:%M:%S')}",
         f"pid del pipeline: {os.getpid()}",
+        f"potencial: {POTENCIAL}",
         f"N={N_ATOMS}  p={P}  q={Q}  T={T:.0f} K  eq={N_EQ}  prod={N_PROD}",
         f"réplicas={len(REPLICAS)}  hilos por réplica={HILOS}  "
         f"núcleos en uso={len(REPLICAS) * HILOS}  RAM libre={mem_disponible_gib():.1f} GiB",
@@ -265,6 +288,8 @@ def preflight() -> None:
     correr(["make", "-C", str(ROOT / "src" / "c"), "all"])
     correr([str(BIN), "--self-test"])
     correr([str(BIN), "--self-test-large"])
+    if POTENCIAL != "tersoff":
+        return
     pruebas = [
         "tests/test_lattice.py",
         "tests/test_potential.py",
@@ -539,7 +564,7 @@ def cerrar() -> int:
     (RUN / "contraste_paper.txt").write_text(texto, encoding="utf-8")
     print(texto, flush=True)
     (RUN / "COMPLETO").write_text(time.strftime("%Y-%m-%d %H:%M:%S") + "\n", encoding="utf-8")
-    if N_ATOMS != 8640:
+    if N_ATOMS != 8640 or POTENCIAL != "tersoff":
         escribir_estado("contraste listo")
         return 0
     r = subprocess.run(
@@ -553,9 +578,10 @@ def cerrar() -> int:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--n", type=int, default=8640)
+    parser.add_argument("--potencial", choices=("tersoff", "lcbopii"), default="tersoff")
     parser.add_argument("--sin-preflight", action="store_true")
     args = parser.parse_args()
-    configurar(args.n)
+    configurar(args.n, args.potencial)
     exigir_venv()
     signal.signal(signal.SIGHUP, signal.SIG_IGN)
     signal.signal(signal.SIGTERM, al_senal)
