@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 """Figuras del estudio LCBOPII (N<=4860) y de la comparación con Tersoff.
 
-La curva de G(q) es la mediana, dibujada con puntos.
-Los modos que se disparan por encima se añaden para que se vean los picos.
+G(q) dibuja todos los modos como puntos, sin mediana ni espaciado.
 Los ejes son los de la Fig. 3 del paper.
 """
 
@@ -23,7 +22,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from contrastar_paper import informe  # noqa: E402
 from ripples.lattice import KAPPA_300K  # noqa: E402
-from ripples.observables import G0_harmonic, line_and_peaks  # noqa: E402
+from ripples.observables import G0_harmonic  # noqa: E402
 
 SIZES = [240, 960, 2160, 4860]
 COLORES = {240: "#1f77b4", 960: "#ff7f0e", 2160: "#2ca02c", 4860: "#d62728"}
@@ -61,16 +60,13 @@ def rdf(base: Path, n: int) -> tuple[np.ndarray, np.ndarray]:
 def serie_gq(ax, info: dict, marca: str, relleno: bool) -> None:
     del marca, relleno
     color = COLORES[info["N"]]
-    q_line, g_line, q_pk, g_pk = line_and_peaks(info["q"], info["g"])
+    q, g = info["q"], info["g"]
+    sel = (q >= FIG3_Q[0]) & (q <= FIG3_Q[1]) & (g > 0)
     ax.plot(
-        q_line, g_line,
-        color=color, marker="o", ms=1.7, ls="none",
-        markeredgewidth=0, label=str(info["N"]), zorder=3,
-    )
-    ax.plot(
-        q_pk, g_pk,
-        color=color, marker="o", ms=1.7, ls="none",
-        markeredgewidth=0, zorder=4,
+        q[sel], g[sel],
+        color=color, marker="o", ms=1.2, ls="none",
+        markeredgewidth=0, alpha=0.55, label=str(info["N"]),
+        zorder=3, rasterized=True,
     )
 
 

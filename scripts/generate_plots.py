@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from matplotlib.ticker import LogFormatterMathtext, LogLocator, NullFormatter
 
 from ripples.lattice import KAPPA_300K  # noqa: E402
-from ripples.observables import G0_harmonic, line_and_peaks  # noqa: E402
+from ripples.observables import G0_harmonic  # noqa: E402
 
 DATOS = ROOT / "results" / "datos"
 GRAF = ROOT / "results" / "graficas"
@@ -165,8 +165,8 @@ def plot_gq():
             q = np.concatenate([q, q_hi[extra]])
             g = np.concatenate([g, g_hi[extra]])
     # Ejes de la Fig. 3: q de 0.05 a 5, G/N de 1e-3 a 1.
-    # La mediana da la curva; los modos que la superan se dibujan encima.
-    q_line, g_line, q_pk, g_pk = line_and_peaks(q, g)
+    # Todos los modos, sin mediana ni espaciado; solo puntos.
+    m = (q >= 0.05) & (q <= 5.0) & (g > 0.0)
     q_th = np.logspace(np.log10(0.05), np.log10(5.0), 400)
     g0 = G0_harmonic(q_th, n_atoms, s0, T=T, kappa=KAPPA_300K)
 
@@ -176,12 +176,9 @@ def plot_gq():
     ax.set_yscale("log")
     ax.plot(q_th, g0, color="#d62728", lw=1.3, label=r"$G_0(q)$", zorder=2)
     ax.plot(
-        q_line, g_line, ls="none", marker="o", ms=2.0,
-        color="#2ca02c", markeredgewidth=0, label=str(n_atoms), zorder=3,
-    )
-    ax.plot(
-        q_pk, g_pk, ls="none", marker="o", ms=2.0,
-        color="#2ca02c", markeredgewidth=0, zorder=4,
+        q[m], g[m], ls="none", marker="o", ms=1.5,
+        color="#2ca02c", markeredgewidth=0, alpha=0.75,
+        label=str(n_atoms), zorder=3, rasterized=True,
     )
     ax.axvline(2.0 * np.pi / 70.0, color="0.35", ls=":", lw=0.9, zorder=1)
     ax.axvline(4.0 * np.pi / (3.0 * 1.42), color="0.35", ls="--", lw=0.8, zorder=1)
